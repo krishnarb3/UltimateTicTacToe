@@ -3,8 +3,11 @@ package com.dev.pro.noob.rb.ultimatetictactoe;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.ColorFilter;
 import android.graphics.Paint;
 import android.graphics.Rect;
+import android.os.Handler;
+import android.os.Message;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -12,6 +15,7 @@ import android.view.View;
 import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.Random;
 
 /**
  * Created by RB on 22-07-2015.
@@ -20,12 +24,15 @@ public class Canvasclass extends View
 {
     Rect rect1[][];
     Boolean[][] touched = new Boolean[9][9];
+    Boolean timeup = false;
     Boolean[][] alreadyclicked = new Boolean[9][9];
     String[][] xoro = new String[9][9];
     Boolean[][] gridswon = new Boolean[3][3];
     String[][] wonby = new String[3][3];
     Boolean xturn = true;
     Canvas canvas;
+    int count;
+    Thread thread;
     Boolean[][] won = new Boolean[3][3];
     int squareclickedx;
     int squareclickedy;
@@ -33,6 +40,23 @@ public class Canvasclass extends View
     int temp=-1;
     public String TAG="TAG";
     int i,j,t=0;
+    Handler handler = new Handler()
+    {
+    Runnable runnable;
+
+    @Override
+    public void handleMessage(Message msg)
+        {
+        super.handleMessage(msg);
+        if(msg.arg1==0)
+            {
+            Log.d(TAG,"Running handler");
+            thread.interrupt();
+            Toast.makeText(getContext(),"Your 10 secs are up",Toast.LENGTH_SHORT).show();
+            timeup = true;
+            }
+        }
+    };
     public Canvasclass(Context context)
     {
         super(context);
@@ -76,7 +100,9 @@ public class Canvasclass extends View
         for(int i=0;i<3;i++)
             for(int j=0;j<3;j++)
                 wonby[i][j] = "";
+
     }
+
 
 
     @Override
@@ -93,7 +119,26 @@ public class Canvasclass extends View
         Paint painttouched = new Paint();
         painttouched.setColor(Color.BLACK);
         painttouched.setStyle(Paint.Style.FILL);
+        Paint painttouched1 = new Paint();
+        painttouched1.setColor(Color.DKGRAY);
+        painttouched1.setStyle(Paint.Style.FILL);
+        Rect rect1 = new Rect();
+        rect1.set(370,50,380,1030);
+        canvas.drawRect(rect1,painttouched1);
+        Rect rect2 = new Rect();
+        rect2.set(700,50,710,1030);
+        canvas.drawRect(rect2,painttouched1);
+        Rect rect3 = new Rect();
+        rect3.set(50,370,1030,380);
+        canvas.drawRect(rect3,painttouched1);
+        Rect rect4 = new Rect();
+        rect4.set(50,700,1030,710);
+        canvas.drawRect(rect4,painttouched1);
         rect = new Rect[9][9];
+        ArrayList<Integer> xcoord = new ArrayList<>();
+        ArrayList<Integer> ycoord = new ArrayList<>();
+        String print = "";
+
         for(i=0;i<9;i++)
         {
             for(j=0;j<9;j++)
@@ -142,23 +187,113 @@ public class Canvasclass extends View
                     paintnottouched.setTextSize(64);
                     canvas.drawRect(rect[i][j], painttouched);
                     canvas.drawText(wonby[i/3][j/3], rect[i][j].exactCenterX(), rect[i][j].exactCenterY() + 25, paintnottouched);
-                    temp=-1;
+                    if(count==0&&temp==((3*(i/3)+(j/3)+1)))
+                        temp=-1;
+                    count++;
+                    Log.d(TAG,"temp = "+temp);
                 }
+                        if(temp==(3*(i/3)+(j/3)+1))
+                        {
+                            Paint paint = new Paint();
+                            paint.setColor(Color.YELLOW);
+                            paint.setStyle(Paint.Style.STROKE);
+                            canvas.drawRect(rect[i][j], paint);
+                        }
+                    if(timeup)
+                    {
+
+                        if(temp==(3*(i/3)+(j/3)+1)&&(!alreadyclicked[i][j])&&(!touched[i][j]))
+                        {
+                            Paint paint = new Paint();
+                            paint.setColor(Color.YELLOW);
+                            Log.d(TAG, "i = " + i + " j = " + j);
+                            if (xturn)
+                                print = "X";
+                            else
+                                print = "O";
+                            Log.d(TAG, print);
+                            xcoord.add(i);
+                            ycoord.add(j);
+                        }
+
+
+                        //canvas.dr
+                    }
                 t++;
             }
+        }
+        Paint pint = new Paint();
+        pint.setTextAlign(Paint.Align.CENTER);
+        pint.setTextSize(64);
+        Random ran = new Random();
+        if(xcoord.size()!=0)
+        {
+            int x = ran.nextInt(xcoord.size());
+
+            Log.d(TAG, "x = " + x);
+            timeup = false;
+            if (!xturn)
+            {
+                xturn = true;
+                xoro[xcoord.get(x)][ycoord.get(x)] = "O";
+                touched[xcoord.get(x)][ycoord.get(x)] = true;
+            } else
+            {
+                xturn = false;
+                xoro[xcoord.get(x)][ycoord.get(x)] = "X";
+                touched[xcoord.get(x)][ycoord.get(x)] = true;
+            }
+            canvas.drawText(print, rect[xcoord.get(x)][ycoord.get(x)].exactCenterX(), rect[xcoord.get(x)][ycoord.get(x)].exactCenterY() + 25, pint);
+            squareclickedx = (xcoord.get(x) + 1) % 3;
+            squareclickedy = (ycoord.get(x) + 1) % 3;
+            if (squareclickedx == 0)
+                squareclickedx = 3;
+            if (squareclickedy == 0)
+                squareclickedy = 3;
+            Log.d(TAG, "Moving to square " + Integer.toString(3 * (squareclickedx - 1) + squareclickedy));
+            temp = 3 * (squareclickedx - 1) + squareclickedy;
+            thread.interrupt();
+            thread = new Thread(new initialthread());
+            thread.start();
         }
         this.rect1 = rect;
         invalidate();
     }
+    public class initialthread implements Runnable
+    {
+        @Override
+        public void run()
+        {   while(!Thread.currentThread().isInterrupted())
+        {
+            for(int k=10;k>=0;k--)
+            {
+                Message message = Message.obtain();
+                message.arg1=k;
+                try {
+                    Thread.sleep(1000);
+                    //if(message.arg1==0)
+                        //Toast.makeText(getContext(),"Your 10 secs are up",Toast.LENGTH_SHORT).show();
+                    handler.sendMessage(message);
+                    Log.d(TAG,message.arg1+" - secs");
+                    } catch (InterruptedException e) {return;}
+
+            }
+        }
+        }
+    }
     @Override
     public boolean onTouchEvent(MotionEvent event)
-    {
+    {   if(thread!=null)
+        thread.interrupt();
+        thread = new Thread(new initialthread());
+        thread.start();
 
         float x = event.getX();
         float y = event.getY();
         switch (event.getAction())
         {
             case MotionEvent.ACTION_DOWN:
+
             for(int i=0;i<9;i++)
             {
                 for(int j=0;j<9;j++)
@@ -189,7 +324,10 @@ public class Canvasclass extends View
                                 xturn = true;
                             }
                             alreadyclicked[i][j] = true;
+                            if(temp==-1)
+                                temp=0;
                         }
+
                     }
                 }
             }
