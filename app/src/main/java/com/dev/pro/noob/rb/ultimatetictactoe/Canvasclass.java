@@ -32,6 +32,7 @@ public class Canvasclass extends View
     Boolean xturn = true;
     Canvas canvas;
     int count;
+    Integer progress;
     Thread thread;
     Boolean[][] won = new Boolean[3][3];
     int squareclickedx;
@@ -48,6 +49,7 @@ public class Canvasclass extends View
     public void handleMessage(Message msg)
         {
         super.handleMessage(msg);
+            progress = msg.arg1;
         if(msg.arg1==0)
             {
             Log.d(TAG,"Running handler");
@@ -138,7 +140,12 @@ public class Canvasclass extends View
         ArrayList<Integer> xcoord = new ArrayList<>();
         ArrayList<Integer> ycoord = new ArrayList<>();
         String print = "";
-
+        Rect progressbar = new Rect();
+        if(progress==null)
+        progressbar.set(50,1200,50+100*10,1250);
+        else
+        progressbar.set(50,1200,50+100*progress,1250);
+        canvas.drawRect(progressbar,painttouched);
         for(i=0;i<9;i++)
         {
             for(j=0;j<9;j++)
@@ -190,7 +197,6 @@ public class Canvasclass extends View
                     if(count==0&&temp==((3*(i/3)+(j/3)+1)))
                         temp=-1;
                     count++;
-                    Log.d(TAG,"temp = "+temp);
                 }
                         if(temp==(3*(i/3)+(j/3)+1))
                         {
@@ -219,6 +225,7 @@ public class Canvasclass extends View
 
                         //canvas.dr
                     }
+
                 t++;
             }
         }
@@ -229,7 +236,7 @@ public class Canvasclass extends View
         if(xcoord.size()!=0)
         {
             int x = ran.nextInt(xcoord.size());
-
+            Log.d(TAG,xcoord.get(x)+","+ycoord.get(x));
             Log.d(TAG, "x = " + x);
             timeup = false;
             if (!xturn)
@@ -237,11 +244,24 @@ public class Canvasclass extends View
                 xturn = true;
                 xoro[xcoord.get(x)][ycoord.get(x)] = "O";
                 touched[xcoord.get(x)][ycoord.get(x)] = true;
+
             } else
             {
                 xturn = false;
                 xoro[xcoord.get(x)][ycoord.get(x)] = "X";
                 touched[xcoord.get(x)][ycoord.get(x)] = true;
+            }
+            if(gridswon[xcoord.get(x)/3][ycoord.get(x)/3])
+            {
+                alreadyclicked[xcoord.get(x)/3][ycoord.get(x)/3]=true;
+                Paint.FontMetrics fm = new Paint.FontMetrics();
+                paintnottouched.setTextAlign(Paint.Align.CENTER);
+                paintnottouched.setTextSize(64);
+                canvas.drawRect(rect[xcoord.get(x)/3][ycoord.get(x)/3], painttouched);
+                canvas.drawText(wonby[xcoord.get(x)/3/3][ycoord.get(x)/3/3], rect[xcoord.get(x)/3][ycoord.get(x)/3].exactCenterX(), rect[xcoord.get(x)/3][ycoord.get(x)/3].exactCenterY() + 25, paintnottouched);
+                if(count==0&&temp==((3*(xcoord.get(x)/3/3)+(xcoord.get(x)/3/3)+1)))
+                    temp=-1;
+                count++;
             }
             canvas.drawText(print, rect[xcoord.get(x)][ycoord.get(x)].exactCenterX(), rect[xcoord.get(x)][ycoord.get(x)].exactCenterY() + 25, pint);
             squareclickedx = (xcoord.get(x) + 1) % 3;
@@ -255,6 +275,218 @@ public class Canvasclass extends View
             thread.interrupt();
             thread = new Thread(new initialthread());
             thread.start();
+            for (int i = 0; i < 3; i++)
+            {
+                if(!won[0][0])
+                    if ((xoro[i][0].equals(xoro[i][1]) && xoro[i][1].equals(xoro[i][2])) || (xoro[0][i].equals(xoro[1][i]) && xoro[1][i].equals(xoro[2][i])) || (xoro[1][1].equals(xoro[2][2]) && xoro[0][0].equals(xoro[1][1])) || ((xoro[0][2].equals(xoro[1][1]) && xoro[1][1].equals(xoro[2][0]))))
+                    {
+                        gridswon[0][0]=true;
+                        String winner;
+                        Log.d(TAG,"WON");
+                        if(xturn)
+                        {
+                            winner = "O";
+                            wonby[0][0] = "O";
+                        }
+                        else
+                        {
+                            winner = "X";
+                            wonby[0][0] = "X";
+                        }
+
+                        Toast.makeText(getContext(), "GRID WON BY " + winner, Toast.LENGTH_LONG).show();
+                        won[0][0]=true;
+                    }
+            }
+            for (int i = 3; i < 6; i++)
+            {
+                if(!won[1][0])
+                    if ((xoro[i][0].equals(xoro[i][1]) && xoro[i][1].equals(xoro[i][2])) || (xoro[3][i-3].equals(xoro[4][i-3]) && xoro[4][i-3].equals(xoro[5][i-3])) || (xoro[4][1].equals(xoro[5][2]) && xoro[3][0].equals(xoro[4][1])) || ((xoro[3][2].equals(xoro[4][1]) && xoro[4][1].equals(xoro[5][0]))))
+                    {
+                        gridswon[1][0] = true;
+
+                        String winner;
+                        Log.d(TAG,"WON");
+                        if(xturn)
+                        {
+                            winner = "O";
+                            wonby[1][0] = "O";
+                        }
+                        else
+                        {
+                            winner = "X";
+                            wonby[1][0] = "X";
+                        }
+
+                        Toast.makeText(getContext(), "GRID WON BY " + winner, Toast.LENGTH_LONG).show();
+                        won[1][0]=true;
+                    }
+            }
+            for (int i = 6; i < 9; i++)
+            {
+                if(!won[2][0])
+                    if ((xoro[i][0].equals(xoro[i][1]) && xoro[i][1].equals(xoro[i][2])) || (xoro[6][i-6].equals(xoro[7][i-6]) && xoro[7][i-6].equals(xoro[8][i-6])) || (xoro[7][1].equals(xoro[8][2]) && xoro[6][0].equals(xoro[7][1])) || ((xoro[6][2].equals(xoro[7][1]) && xoro[7][1].equals(xoro[8][0]))))
+                    {
+                        gridswon[2][0] = true;
+                        String winner;
+                        Log.d(TAG,"WON");
+                        if(xturn)
+                        {
+                            winner = "O";
+                            wonby[2][0] = "O";
+                        }
+                        else
+                        {
+                            winner = "X";
+                            wonby[2][0]="X";
+                        }
+
+                        Toast.makeText(getContext(), "GRID WON BY " + winner, Toast.LENGTH_LONG).show();
+                        won[2][0]=true;
+                    }
+            }
+            for (int i = 0; i < 3; i++)
+            {
+                if(!won[0][1])
+                    if ((xoro[i][3].equals(xoro[i][4]) && xoro[i][4].equals(xoro[i][5])) || (xoro[0][i+3].equals(xoro[1][i+3]) && xoro[1][i+3].equals(xoro[2][i+3])) || (xoro[1][4].equals(xoro[2][5]) && xoro[0][3].equals(xoro[1][4])) || ((xoro[0][5].equals(xoro[1][4]) && xoro[1][4].equals(xoro[2][3]))))
+                    {
+                        gridswon[0][1] = true;
+                        String winner;
+                        Log.d(TAG,"WON");
+                        if(xturn)
+                        {
+                            winner = "O";
+                            wonby[0][1]="O";
+                        }
+                        else
+                        {
+                            winner = "X";
+                            wonby[0][1]="X";
+
+                        }
+
+                        Toast.makeText(getContext(), "GRID WON BY " + winner, Toast.LENGTH_LONG).show();
+                        won[0][1]=true;
+                    }
+            }
+            for (int i = 3; i < 6; i++)
+            {
+                if(!won[1][1])
+                    if ((xoro[i][3].equals(xoro[i][4]) && xoro[i][4].equals(xoro[i][5])) || (xoro[3][i].equals(xoro[4][i]) && xoro[4][i].equals(xoro[5][i])) || (xoro[4][4].equals(xoro[5][5]) && xoro[3][3].equals(xoro[4][4])) || ((xoro[3][5].equals(xoro[4][4]) && xoro[4][4].equals(xoro[5][3]))))
+                    {
+                        gridswon[1][1] = true;
+                        String winner;
+                        Log.d(TAG,"WON");
+                        if(xturn)
+                        {
+                            winner = "O";
+                            wonby[1][1]="O";
+                        }
+                        else
+                        {
+                            winner = "X";
+                            wonby[1][1]="X";
+                        }
+
+                        Toast.makeText(getContext(), "GRID WON BY " + winner, Toast.LENGTH_LONG).show();
+                        won[1][1]=true;
+                    }
+            }
+            for (int i = 6; i < 9; i++)
+            {
+                if(!won[2][1])
+                    if ((xoro[i][3].equals(xoro[i][4]) && xoro[i][4].equals(xoro[i][5])) || (xoro[6][i-3].equals(xoro[7][i-3]) && xoro[7][i-3].equals(xoro[8][i-3])) || (xoro[7][4].equals(xoro[8][5]) && xoro[6][3].equals(xoro[7][4])) || ((xoro[6][5].equals(xoro[7][4]) && xoro[7][4].equals(xoro[8][3]))))
+                    {
+                        gridswon[2][1] = true;
+                        String winner;
+                        Log.d(TAG,"WON");
+                        if(xturn)
+                        {
+                            winner = "O";
+                            wonby[2][1]="O";
+                        }
+                        else
+                        {
+                            winner = "X";
+                            wonby[2][1]="X";
+                        }
+
+                        Toast.makeText(getContext(), "GRID WON BY " + winner, Toast.LENGTH_LONG).show();
+                        won[2][1]=true;
+                    }
+            }
+            for (int i = 0; i < 3; i++)
+            {
+                if(!won[0][2])
+                    if ((xoro[i][6].equals(xoro[i][7]) && xoro[i][7].equals(xoro[i][8])) || (xoro[0][i+6].equals(xoro[1][i+6]) && xoro[1][i+6].equals(xoro[2][i+6])) || (xoro[1][7].equals(xoro[2][8]) && xoro[0][6].equals(xoro[1][7])) || ((xoro[0][8].equals(xoro[1][7]) && xoro[1][7].equals(xoro[2][6]))))
+                    {
+                        gridswon[0][2] = true;
+                        String winner;
+                        Log.d(TAG,"WON");
+                        if(xturn)
+                        {
+                            winner = "O";
+                            wonby[0][2]="O";
+                        }
+                        else
+                        {
+                            winner = "X";
+                            wonby[0][2]="X";
+                        }
+
+                        Toast.makeText(getContext(), "GRID WON BY " + winner, Toast.LENGTH_LONG).show();
+                        won[0][2]=true;
+                    }
+            }
+            for (int i = 3; i < 6; i++)
+            {
+                if(!won[1][2])
+                    if ((xoro[i][6].equals(xoro[i][7]) && xoro[i][7].equals(xoro[i][8])) || (xoro[3][i+3].equals(xoro[4][i+3]) && xoro[4][i+3].equals(xoro[5][i+3])) || (xoro[4][7].equals(xoro[5][8]) && xoro[3][6].equals(xoro[4][7])) || ((xoro[3][8].equals(xoro[4][7]) && xoro[4][7].equals(xoro[5][6]))))
+                    {
+                        gridswon[1][2] = true;
+                        String winner;
+                        Log.d(TAG,"WON");
+                        if(xturn)
+                        {
+                            winner = "O";
+                            wonby[1][2]="O";
+                        }
+                        else
+                        {
+                            winner = "X";
+                            wonby[1][2]="X";
+                        }
+
+                        Toast.makeText(getContext(), "GRID WON BY " + winner, Toast.LENGTH_LONG).show();
+                        won[1][2]=true;
+                    }
+            }
+            for (int i = 6; i < 9; i++)
+            {
+                if(!won[2][2])
+                    if ((xoro[i][6].equals(xoro[i][7]) && xoro[i][7].equals(xoro[i][8])) || (xoro[6][i].equals(xoro[7][i]) && xoro[7][i].equals(xoro[8][i])) || (xoro[7][7].equals(xoro[8][8]) && xoro[6][6].equals(xoro[7][7])) || ((xoro[6][8].equals(xoro[7][7]) && xoro[7][7].equals(xoro[8][8]))))
+                    {
+                        gridswon[2][2] = true;
+                        String winner;
+                        Log.d(TAG,"WON");
+                        if(xturn)
+                        {
+                            winner = "O";
+                            wonby[2][2]="O";
+                        }
+                        else
+                        {
+                            winner = "X";
+                            wonby[2][2]="X";
+                        }
+
+                        Toast.makeText(getContext(), "GRID WON BY " + winner, Toast.LENGTH_LONG).show();
+                        won[2][2]=true;
+                    }
+            }
+            for(int z=0;z<3;z++)
+                if ((wonby[z][0].equals(wonby[z][1]) && wonby[z][1].equals(wonby[z][2])) || (wonby[0][z].equals(wonby[1][z]) && wonby[1][z].equals(wonby[2][z])) || (wonby[1][1].equals(wonby[2][2]) && wonby[0][0].equals(wonby[1][1])) || ((wonby[0][2].equals(wonby[1][1]) && wonby[1][1].equals(wonby[2][0]))))
+                    Toast.makeText(getContext(),"Complete Match WoN by "+wonby[z][0],Toast.LENGTH_LONG).show();
         }
         this.rect1 = rect;
         invalidate();
@@ -283,17 +515,17 @@ public class Canvasclass extends View
     }
     @Override
     public boolean onTouchEvent(MotionEvent event)
-    {   if(thread!=null)
-        thread.interrupt();
-        thread = new Thread(new initialthread());
-        thread.start();
+    {
 
         float x = event.getX();
         float y = event.getY();
         switch (event.getAction())
         {
             case MotionEvent.ACTION_DOWN:
-
+                if(thread!=null)
+                    thread.interrupt();
+                thread = new Thread(new initialthread());
+                thread.start();
             for(int i=0;i<9;i++)
             {
                 for(int j=0;j<9;j++)
